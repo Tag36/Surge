@@ -1,7 +1,7 @@
 #!name=Surge Monitor
 #!desc=监控 Surge 运行状态及流量统计
 #!category=Panel
-#!arguments=key:默认Key,port:6171
+#!arguments=key:默认Key,port:6170
 #!arguments-desc=key:Surge HTTP API 的 Key\nport:Surge HTTP API 的端口号
 
 [Panel]
