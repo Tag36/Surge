@@ -1,7 +1,11 @@
-#!name=Telegram 链接重定向
-#!desc=将tg链接跳转到第三方客户端
+#!name=Telegram 跳转
+#!desc=将 Telegram 链接重定向到指定客户端
+#!arguments=客户端:Telegram
+#!arguments-desc=客户端选项：Telegram、Nagram、Swiftgram、Turrit、iMe、Nicegram、Lingogram、Regram
 
 [Script]
-TgRedirect = type=http-request,pattern=^https?://(t[.]me|telegram[.]me)(/|[?]|$),script-path=https://raw.githubusercontent.com/Tag36/Surge/refs/heads/main/Telegram.js,argument=client=Telegram,timeout=3
+TelegramRedirect = type=http-request,pattern=^https?://(t[.]me|telegram[.]me)/.+,script-path=https://raw.githubusercontent.com/Tag36/Surge/refs/heads/main/Telegram.js,argument="client={{{CLIENT}}}",timeout=10
+
+
 [MITM]
 hostname = %APPEND% t.me, telegram.me
