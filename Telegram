@@ -1,0 +1,110 @@
+/**
+ * Surge: t.me / telegram.me → Telegram 客户端跳转
+ *
+ * 说明：
+ * - 客户端通过模块 [Script] 中的 argument 参数选择，例如 client=Nicegram
+ * - 脚本从 Surge 的 $argument 读取客户端名称，并按 SCHEMES 映射 URL Scheme
+ * - 使用 http-request 的 response 返回 302，并以 Location 指向目标 App 深链
+ * - 支持用户名、公开帖子、邀请链接、贴纸组和分享链接；普通 query 参数会保留
+ * - Telegram 为直通模式；其他未识别的客户端名称回退到 tg scheme
+ */
+
+
+const SCHEMES = {
+  Telegram: "tg",
+  Nagram: "tg",
+  Swiftgram: "sg",
+  Turrit: "turrit",
+  iMe: "ime",
+  Nicegram: "ng",
+  Lingogram: "lingo",
+  Regram: "regram",
+};
+
+function decodeComponent(value, formEncoded) {
+  const normalized = formEncoded ? value.replace(/\+/g, " ") : value;
+  try {
+    return decodeURIComponent(normalized);
+  } catch (error) {
+    return normalized;
+  }
+}
+
+function queryValue(query, key) {
+  if (!query) return "";
+  const pairs = query.split("&");
+  for (let index = 0; index < pairs.length; index += 1) {
+    const separator = pairs[index].indexOf("=");
+    const rawKey = separator < 0 ? pairs[index] : pairs[index].slice(0, separator);
+    if (decodeComponent(rawKey, true) === key) {
+      const rawValue = separator < 0 ? "" : pairs[index].slice(separator + 1);
+      return decodeComponent(rawValue, true);
+    }
+  }
+  return "";
+}
+
+function clientFromArgument(argument) {
+  const match = String(argument || "").match(/(?:^|[&,])client=([^&,]*)/i);
+  return match ? decodeComponent(match[1], true).trim() : "Telegram";
+}
+
+function makeDeepLink(scheme, path, query) {
+  const parts = path.split("/").filter(Boolean).map(function (part) {
+    return decodeComponent(part, false);
+  });
+  if (!parts[0]) return "";
+
+  if (parts[0][0] === "+") {
+    return scheme + "://join?invite=" + encodeURIComponent(parts[0].slice(1));
+  }
+  if (parts[0] === "joinchat" && parts[1]) {
+    return scheme + "://join?invite=" + encodeURIComponent(parts[1]);
+  }
+  if (parts[0] === "addstickers" && parts[1]) {
+    return scheme + "://addstickers?set=" + encodeURIComponent(parts[1]);
+  }
+  if (parts[0] === "share" && parts[1] === "url") {
+    return scheme + "://msg_url?url=" + encodeURIComponent(queryValue(query, "url")) +
+      "&text=" + encodeURIComponent(queryValue(query, "text"));
+  }
+
+  const suffix = query ? "&" + query : "";
+  if (parts[1] && /^\d+$/.test(parts[1])) {
+    return scheme + "://resolve?domain=" + encodeURIComponent(parts[0]) +
+      "&post=" + encodeURIComponent(parts[1]) + suffix;
+  }
+  return scheme + "://resolve?domain=" + encodeURIComponent(parts[0]) + suffix;
+}
+
+const requestUrl = String($request.url || "");
+const match = requestUrl.match(/^https?:\/\/(?:t\.me|telegram\.me)(?::\d+)?(?=\/|\?|#|$)(\/[^?#]*)?(?:\?([^#]*))?/i);
+
+if (!match) {
+  $done({});
+} else {
+  const client = clientFromArgument($argument);
+  if (client === "Telegram") {
+    $done({});
+  } else {
+    const scheme = SCHEMES[client] || "tg";
+    let path = (match[1] || "").replace(/^\//, "");
+    if (path.indexOf("s/") === 0) path = path.slice(2);
+
+    const location = makeDeepLink(scheme, path, match[2] || "");
+    if (!location) {
+      $done({});
+    } else {
+      $done({
+        response: {
+          status: 302,
+          headers: {
+            Location: location,
+            "Cache-Control": "no-store, no-cache",
+          },
+          body: "",
+        },
+      });
+    }
+  }
+}
