@@ -4,7 +4,7 @@
 #!arguments-desc=客户端选项：Telegram、Nagram、Swiftgram、Turrit、iMe、Nicegram、Lingogram、Regram
 
 [Script]
-TelegramRedirect = type=http-request,pattern=^https?://(t[.]me|telegram[.]me)/.+,script-path=https://raw.githubusercontent.com/Tag36/Surge/refs/heads/main/Telegram.js,argument="client={{{CLIENT}}}",timeout=10
+TelegramRedirect = type=http-request,pattern=^https?://(t[.]me|telegram[.]me)/.+,script-path=https://raw.githubusercontent.com/Tag36/Surge/refs/heads/main/Telegram.js,argument="client={{{客户端}}}",timeout=10
 
 
 [MITM]
