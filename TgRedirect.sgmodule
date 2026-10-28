@@ -1,0 +1,7 @@
+#!name=Telegram Client Redirect
+#!desc=将 t.me 和 telegram.me 链接跳转到指定 Telegram 客户端。编辑脚本参数选择客户端
+
+[Script]
+TgRedirect = type=http-request,pattern=^https?://(t[.]me|telegram[.]me)(/|[?]|$),script-path=https://raw.githubusercontent.com/Tag36/Surge/refs/heads/main/Telegram.js,argument=client=Telegram,timeout=3
+[MITM]
+hostname = %APPEND% t.me, telegram.me
